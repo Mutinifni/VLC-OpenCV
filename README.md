@@ -28,4 +28,3 @@ You are free to share, modify, and use the code in whatever way.
 
 Pratyush Patel ( https://github.com/Mutinifni/ )
 
-** THE PROJECT IS UNDER DEVELOPMENT **

@@ -1,4 +1,4 @@
-// Plays/pauses a media played by VLC media player, based on Haar face detection.
+// Combines both face and hand detection, possibility of threading here
 
 // Libraries used : OpenCV, LibVLC
 
@@ -15,6 +15,7 @@ using namespace cv;
 
 // Create CC for HaarClassification
 CascadeClassifier face_cascade;
+CascadeClassifier hand_cascade;
 
 // Face detection function, returns whether present
 int faceDetect(Mat frame)
@@ -36,13 +37,38 @@ int faceDetect(Mat frame)
 	return 1;
 }
 
+// Hand detection function, returns the average x-coordinate
+float handDetect(Mat frame)
+{
+	std::vector<Rect> hands;
+	Mat frame_gray;
+	float avgPos = 0;
+
+	// Convert to GRAY scale for cascade
+	cvtColor(frame, frame_gray, COLOR_BGR2GRAY);
+	equalizeHist(frame_gray, frame_gray);
+
+	// Detect hand
+	hand_cascade.detectMultiScale(frame_gray, hands, 1.1, 2, 0, Size(30,30));
+
+	for(size_t i = 0; i < hands.size(); i++)
+	{
+		avgPos += (hands[i].x + hands[i].width/2);
+	}
+	avgPos = avgPos / hands.size();
+
+	return avgPos;
+}
+
+
 int main(int argc, char** argv)
 {
 	// Variable declarations
 	VideoCapture capture;
 	Mat frame;
-	int esc; 
+	int esc, volume; 
 	int facePresent, facePast = 1;
+	float handPos, minFWidth, maxFWidth;	
 
 	// LibVLC requirements, plays video specified as a command line argument
 	libvlc_instance_t *instance = libvlc_new(0, NULL);
@@ -57,6 +83,12 @@ int main(int argc, char** argv)
 		return -1;
 	}
 
+	if(!hand_cascade.load("XML/palm.xml"))
+	{
+		printf("Error loading XML/palm.xml\n");
+		return -1; 
+	}	
+
 	capture.open(-1);
 	if(!capture.isOpened())
 	{
@@ -65,6 +97,10 @@ int main(int argc, char** argv)
 	}
 
 	libvlc_media_player_play(mplayer);
+	capture.read(frame);
+	maxFWidth = (0.65) * capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	minFWidth = (0.35) * capture.get(CV_CAP_PROP_FRAME_WIDTH);
+	volume = libvlc_audio_get_volume(mplayer);
 
 	// Processing
 	while(capture.read(frame))
@@ -86,6 +122,23 @@ int main(int argc, char** argv)
 			libvlc_media_player_play(mplayer);
 
 		facePast = facePresent;
+
+		// Function call that returns x-coordinate of detected hand
+		handPos = handDetect(frame);
+
+		// Increase or Decrease volume based on palm position
+		if(handPos >= maxFWidth && volume >= 0)
+		{
+			volume -= 10;
+			libvlc_audio_set_volume(mplayer, volume);
+			//printf("%d\n", volume);
+		}
+		else if(handPos <= minFWidth && volume <= 100)
+		{
+			volume += 10;
+			libvlc_audio_set_volume(mplayer, volume);
+			//printf("%d\n", volume);
+		} 		
 
 		// Premature break condition
 		esc = waitKey(10);
