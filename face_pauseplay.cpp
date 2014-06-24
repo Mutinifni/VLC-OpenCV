@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 // Plays/pauses a media played by VLC media player, based on Haar face detection.
-=======
-// Plays/pauses a video based on Haar face detection.
->>>>>>> c501c599b456cee863877bd55bb121163862fff5
 
 // Libraries used : OpenCV, LibVLC
 
@@ -35,13 +31,7 @@ int faceDetect(Mat frame)
 
 	// Return whether present
 	if(faces.size() == 0)
-<<<<<<< HEAD
-	{
 		return 0;
-	}
-=======
-		return 0;
->>>>>>> c501c599b456cee863877bd55bb121163862fff5
 
 	return 1;
 }
@@ -61,15 +51,15 @@ int main(int argc, char** argv)
 	libvlc_media_release(media);
 
 	// Error checking
-<<<<<<< HEAD
 	if(!face_cascade.load("XML/face.xml"))
 	{
 		printf("Error loading XML/face.xml\n");
-=======
+		return -1;
+	}
+
 	if(!face_cascade.load("XML/haarcascade_frontalface_alt_tree.xml"))
 	{
 		printf("Error loading XML/haarcascade_frontalface_alt_tree.xml\n");
->>>>>>> c501c599b456cee863877bd55bb121163862fff5
 		return -1; 
 	}
 
@@ -113,8 +103,4 @@ int main(int argc, char** argv)
 	}
 
 	return 0;
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> c501c599b456cee863877bd55bb121163862fff5
